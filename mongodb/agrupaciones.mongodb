@@ -1,0 +1,25 @@
+use('sample_airbnb');
+
+// bucket para agrupar y separar por cantidad indicada
+// bucketauto le dices cuantos grupos y se generan sin ninguna otra especificacion
+db.listingsAndReviews.aggregate([
+    //{
+       // $bucket: {
+       //     groupBy: "$review_scores.review_scores_rating", //sobre que campo queremos agrupar
+      //      boundaries: [0,50,70,85,100], //entre que rangos
+       //     default: "N/A", //que hacer con los que no entran en los rangos
+       //     output: {
+       //         count: {$sum: 1}
+       //     }
+      // }
+    //}
+    {
+        $bucketAuto: {
+            groupBy: "$review_scores.review_scores_rating", //sobre que campo queremos agrupar
+            buckets: 4, //cuantos rangos
+            output: {
+                count: {$sum: 1}
+            }
+        }
+    } 
+]);

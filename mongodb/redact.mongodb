@@ -1,0 +1,17 @@
+//redact omite todo lo que cumpla con cierta condicion
+//redact es mas costoso computacionalmente que redact
+use('sample_airbnb');
+
+db.listingsAndReviews.aggregate([
+    {
+        $redact: {
+            $cond:{
+                if: {$gte: ["$review_scores.review_scores_rating",95]},//mayor o igual
+                then: "$$KEEP", //cumple se queda
+                else: "$$PRUNE" //no cumple se va
+        }}
+    },
+    {
+        $count: "count"
+    }
+]);

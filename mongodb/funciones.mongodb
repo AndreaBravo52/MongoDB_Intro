@@ -1,0 +1,42 @@
+//$function creacion de funciones en js que son una etapa del pipeline
+
+//{$function: {
+    //body: 'function(user){
+    //return user;
+//}',
+//args: ["$user"],
+//lang: "js",},
+
+
+use('sample_airbnb');
+
+db.listingsAndReviews.aggregate([
+    {
+        $addField: {
+            wordCount:{
+                $function: {
+                    body: function (description) {
+                        if (description){
+                            var words = description.split(' ');
+                            return words.length;
+                        } else {
+                            return 0;
+                        }
+                    },
+                    args: ["$description"],
+                    lang: "js"
+                }
+            }
+        }
+    },
+    {
+        $group: {
+            _id: "$property_type",
+            mediaPalabras: {
+                $avg: "$wordCount"
+            }
+        }
+    }
+]);
+
+//no corre porque no tengo docker y atlas no soporta funciones

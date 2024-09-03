@@ -1,0 +1,53 @@
+//coordenadas georeferenciadas
+// $geoNear
+//uso de coordenadas, mostrar resultados en un mapa
+
+//seleccionar un punto en el mapa, y sacar las propiedades que estan cerca
+//dado una distancia maxima especificada
+
+use('sample_airbnb');
+
+db.listingsAndReviews.aggregate([
+    {
+        $geoNear: {
+            near: {//cerca de que punto voy a buscar
+                type: "Point",
+                coordinates: [-73.95552676483872,40.79948939486901]
+            },
+            distanceField: "distancia", //que guarde la distancia en este campo
+            maxDistance: 30000,//en metros
+            spherical: true//sobre que base de calculos (plano-barato o esferico-preciso)
+        }
+    },
+    {
+        $match: {
+            beds: {
+                $ne: 0 // garantizar que el valor no sea cero
+            }
+        }
+    },
+    {
+        $project:{
+            distancia: 1,
+            precioPCama: {
+                $divide:["$price", "$beds"]
+            }
+        }
+    },
+    {
+        $group: {
+            _id:{
+                $cond: {
+                    if: {
+                        $lte: ["$distancia",2000]//menor o igual a 2km
+                    },
+                    then: "menos2k",
+                    else: "mas2k"
+                }
+            },
+            mediaPCama: {
+                $avg:"$precioPCama"
+            }
+        }
+    }
+]);

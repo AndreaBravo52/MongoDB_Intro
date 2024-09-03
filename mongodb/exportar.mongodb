@@ -1,0 +1,33 @@
+//$out crea una coleccion nueva de los resultados del pipeline
+//es para exportar los resultaods
+
+// que se pueda invocar la nueva colecion
+
+//si colocas un nombre que ya existe la va a sobreescribir
+//debe de ser el ultimo paso, cada vez que se ejecute crea la base
+//los indices no se transfieren automaticamente
+
+use('sample_airbnb');
+
+db.listingsAndReviews.aggregate([
+    {
+        $sort: {
+            "address.market":1,
+            price: -1
+        }
+    },
+    {
+        $group: {
+            _id: "$address.market",
+            mostExp: {
+                $first: {
+                    nombre: "$name",
+                    precio: "$price"
+                }
+            }
+        }
+    },
+    {
+        $out: "propiedadesMasCostosas"//nombre de la tabla donde se va a vaciar la informacion
+    }
+]);

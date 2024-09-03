@@ -1,0 +1,101 @@
+//$match: seleccionar un subconjunto de registros (SQL WHERE)
+//$sort: ordenar de acuerdo al requerimiento
+//$limit: seleccionar cuantos registros
+
+
+//$match: 'address.country_code':'US'
+//dentro de address toma country code, y filtra a solo US
+
+//$sort: price: 1 //1= ascendente, -1 =descendente
+
+
+//$limit: 5 //solo indicas la cantidad que quieres ver
+
+//$group: juntar por cierto grupo
+
+//$project: no entregar json, si no obtener resultado en una frase, en un project
+//lista de campos indicando como queremos que salga el outcome
+
+//$count cuales son los documentos que hemos agregado
+
+//$average el valor de la media de lo agrupado
+
+//$set dar formato para modelar el resultado final
+//incluye todos los campos que estaban en el pipeline
+
+use('sample_airbnb');
+
+db.listingsAndReviews.aggregate([
+
+    { $match: {"address.country_code":"US"}},
+    {
+        $sort: {
+            property_type: 1,
+            price: 1
+        }
+    },
+    {$group:{
+        _id: "$property_type", //sobre que campo
+        count: {
+            $sum: 1//suma de forma positiva
+        },
+        media: {
+            $avg: "$price"
+        },
+        masBajo: {//como lo voy a juntar
+            $first:{
+                nombre: "$name",
+                precio: "$price",
+                direccion: "$address"
+            }
+            
+        },
+        masAlto: {//como lo voy a juntar
+            $last:{
+                nombre: "$name",
+                precio: "$price",
+                direccion: "$address"
+            }
+            
+        } 
+    }},
+    { $limit: 5},
+    //{$project:{
+     //   "_id":0,
+       // "Tipo de propiedad": "$_id",
+        //"Cantidad de propiedades": "$count",
+        //"El precio promedio": "$media",
+        //"El menor precio": "$masBajo.precio",
+        //"El mayor precio": "$masAlto.precio"
+    //}}
+    {$set:{
+        "Tipo de propiedad": "$_id",
+        "Cantidad de propiedades": "$count",
+        "El precio promedio": {$round: ["$media",2]},
+        "Propiedades destacadas": [
+            {
+                "Tipo": "Mas bajo",
+                "Nombre": "$masBajo.nombre",
+                "Precio": "$masBajo.precio"
+            },
+            {
+                "Tipo": "Mas alto",
+                "Nombre": "$masAlto.nombre",
+                "Precio": "$masAlto.precio"
+            }
+        ]
+        
+    }},
+    {
+        $project:{
+            _id:0,
+            media:0,
+            count:0,
+            masBajo:0,
+            masAlto:0
+            
+        }
+    }
+])
+
+
